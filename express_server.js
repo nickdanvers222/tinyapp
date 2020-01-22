@@ -51,6 +51,7 @@ app.get("/urls/new", (req,res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
+  
   let templateVars = {
     shortURL: req.params.shortURL ,
     longURL: urlDatabase[req.params.shortURL]["longURL"],
@@ -60,7 +61,8 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 
  app.get("/urls",(req, res) => {
-     let templateVars = {
+
+    let templateVars = {
     urls: urlsForUser(urlDatabase, req.cookies.user_id),
     user: users[req.cookies.user_id]
   };
@@ -110,11 +112,11 @@ res.redirect("/urls")
 });
 //
 
-// app.post("/urls/:shortURL/update", (req, res) => {
-//   urlDatabase[req.params.shortURL] = {longURL : req.body.newURL, userID : req.params.id}
-//   //urlDatabase[req.params.shortURL] = req.body.newURL;
-//   res.redirect("/urls",)
-// });
+///////// app.post("/urls/:shortURL/update", (req, res) => {
+/////////   urlDatabase[req.params.shortURL] = {longURL : req.body.newURL, userID : req.params.id}
+/////////   //urlDatabase[req.params.shortURL] = req.body.newURL;
+/////////   res.redirect("/urls",)
+///////// });
 app.post("/logout" , (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls")
@@ -150,6 +152,10 @@ app.post("/login", (req, res) => {
 });
 
 app.post("/urls/:shortURL/delete", (req, res) => {
+  const newObject = urlsForUser(urlDatabase, req.cookies.user_id)
+  if(!(req.params.shortURL in newObject)) {
+    res.redirect("/urls");
+  }
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls/");
 })
@@ -162,8 +168,19 @@ app.post("/urls", (req, res ) => {
   res.redirect(`/urls/${shortURL}`);
 });
 app.post("/urls/:id", (req, res) => { 
+
+  const newObject = urlsForUser(urlDatabase, req.cookies.user_id)
+   if(!(req.params.id in newObject)) {
+     let templateVars = {
+       message: "You need to be logged in and visiting your own URLS to edit them",
+       error: 401,
+       user: users[req.cookies.user_id]
+     }
+     res.status(401);
+     res.render("urls_error", templateVars);
+   }
+
   urlDatabase[req.params.id]["longURL"] = req.body.newURL;
-  console.log(urlDatabase);
   res.redirect("/urls")
 });
 
