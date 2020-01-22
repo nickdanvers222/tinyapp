@@ -39,27 +39,30 @@ app.get("/register", (req, res)=> {
  });
 
  app.get("/urls/error", (req, res) => {
-   let templateVars = {user: users[req.cookies.user_id],error: 400, message: "Error message 400"}
-   res.status(400);
-   res.render("urls_error", templateVars);
+   res.redirect("/urls/error");
  });
 
 app.get("/urls/new", (req,res) => {
-  let templateVars = {user: users[req.cookies.user_id]}
+  if(!(users[req.cookies.user_id])) {
+    res.redirect("/login")
+  }
+  let templateVars = {
+    user: users[req.cookies.user_id]
+  }
   res.render("urls_new", templateVars);
 });
 
 app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL ,
-    longURL: urlDatabase[req.params.shortURL],
-     user: users[req.cookies.user_id]
-    };
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
+    user: users[req.cookies.user_id]
+  };
   res.render("urls_show", templateVars)
 });
 
  app.get("/urls",(req, res) => {
-  let templateVars = {
+     let templateVars = {
     urls: urlDatabase,
     user: users[req.cookies.user_id]
   };
@@ -69,9 +72,7 @@ app.get("/urls/:shortURL", (req, res) => {
 app.get("/urls.json", (req, res) => {
     res.json(urlDatabase);
 });
-app.get("/hello", (req, res) => {
-    res.send("<html><body>Hello <b>World</b></body></html>\n")
-});
+
 app.get("/u/:shortURL", (req, res) => {
   res.redirect(urlDatabase[req.params.shortURL]);
 });
@@ -96,15 +97,15 @@ res.render("urls_error", templateVars)
 //
 users[id] = {id, email, password};
 //
-if (email === user.email) {
-let templateVars = {
-  user: emailHelper(email, users),
-  error: 400,
-  message: "That email already exists!"
-}
-res.status(400);
-res.render("urls_error", templateVars);
-}
+  if (email === user.email) {
+    let templateVars = {
+    user: emailHelper(email, users),
+    error: 400,
+    message: "That email already exists!"
+    }
+    res.status(400);
+    res.render("urls_error", templateVars);
+    }
 //
 res.cookie("user_id", id);
 res.redirect("/urls")
@@ -112,7 +113,8 @@ res.redirect("/urls")
 //
 
 app.post("/urls/:shortURL/update", (req, res) => {
-  urlDatabase[req.params.shortURL] = req.body.newURL;
+  urlDatabase[req.params.shortURL] = {longURL : req.body.newURL, userID : req.params.id}
+  //urlDatabase[req.params.shortURL] = req.body.newURL;
   res.redirect("/urls")
 });
 app.post("/logout" , (req, res) => {
@@ -155,11 +157,15 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 })
 app.post("/urls", (req, res ) => {
   const shortURL = generateRandomString();
-  urlDatabase[shortURL] = req.body.longURL;
+  urlDatabase[shortURL] = {
+    longURL : req.body.longURL,
+    userID : req.cookies.user_id
+  };
   res.redirect(`/urls/${shortURL}`);
 });
 app.post("/urls/:id", (req, res) => { 
-  urlDatabase[req.params.id] = req.body.newURL
+  urlDatabase[req.params.id]["longURL"] = req.body.newURL;
+  console.log(urlDatabase);
   res.redirect("/urls")
 });
 
