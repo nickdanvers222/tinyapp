@@ -20,35 +20,51 @@ const users = {
   //   password: "ab"
   // }
 };
+//
 ///
 app.get("/", (req, res) => {
   res.send("youre in the root!");
 });
 
 //RENDERS
-app.get("/urls",(req, res) => {
-  let templateVars = { urls: urlDatabase,
-                  user: users[req.cookies.user_id]};
-  res.render("urls_index",templateVars);
-});
+
 app.get("/login", (req, res) => {
   let templateVars = {user: users[req.cookies.user_id]}
   res.render("urls_login", templateVars)
 });
-app.get("/urls/new", (req,res) => {
-  let templateVars = {user: users[req.cookies.user_id]}
-  res.render("urls_new", templateVars);
-});
-app.get("/urls/:shortURL", (req, res) => {
-    let templateVars = {shortURL: req.params.shortURL ,
-                       longURL: urlDatabase[req.params.shortURL],
-                       user: users[req.cookies.user_id]};
-  res.render("urls_show", templateVars)
-});
+
 app.get("/register", (req, res)=> {
    let templateVars = {user: users[req.cookies.user_id]};
    res.render("urls_register", templateVars)
  });
+
+ app.get("/urls/error", (req, res) => {
+   let templateVars = {user: users[req.cookies.user_id],error: 400, message: "Error message 400"}
+   res.status(400);
+   res.render("urls_error", templateVars);
+ });
+
+app.get("/urls/new", (req,res) => {
+  let templateVars = {user: users[req.cookies.user_id]}
+  res.render("urls_new", templateVars);
+});
+
+app.get("/urls/:shortURL", (req, res) => {
+  let templateVars = {
+    shortURL: req.params.shortURL ,
+    longURL: urlDatabase[req.params.shortURL],
+     user: users[req.cookies.user_id]
+    };
+  res.render("urls_show", templateVars)
+});
+
+ app.get("/urls",(req, res) => {
+  let templateVars = {
+    urls: urlDatabase,
+    user: users[req.cookies.user_id]
+  };
+  res.render("urls_index",templateVars);
+});
 //RENDERS END
 app.get("/urls.json", (req, res) => {
     res.json(urlDatabase);
@@ -60,26 +76,41 @@ app.get("/u/:shortURL", (req, res) => {
   res.redirect(urlDatabase[req.params.shortURL]);
 });
  // GETS END
+
  // POSTS START
 app.post("/register", (req, res) => {
-  const id = generateRandomString();
-  const {email, password } = req.body;
-  const user = emailHelper(email, users);
-  //
-  if(email.length === 0 || password.length === 0) {
-   res.statusCode =400; res.send("400 Bad Request");
-  }
-  //
-  users[id] = {id, email, password};
-  //
-  if (email === user.email){
-    res.send("400 no ok - email already exists");
-  }
-  //
-  res.cookie("user_id", id);
-  res.redirect("/urls")
+const id = generateRandomString();
+const {email, password } = req.body;
+const user = emailHelper(email, users);
+
+//
+if(email.length === 0 || password.length === 0) {
+let templateVars = {
+  user: emailHelper(email, users),
+  error: 403,
+  message: "You've left the email or password field empty!"
+}
+res.status(403);
+res.render("urls_error", templateVars)
+}
+//
+users[id] = {id, email, password};
+//
+if (email === user.email) {
+let templateVars = {
+  user: emailHelper(email, users),
+  error: 400,
+  message: "That email already exists!"
+}
+res.status(400);
+res.render("urls_error", templateVars);
+}
+//
+res.cookie("user_id", id);
+res.redirect("/urls")
 });
 //
+
 app.post("/urls/:shortURL/update", (req, res) => {
   urlDatabase[req.params.shortURL] = req.body.newURL;
   res.redirect("/urls")
@@ -88,23 +119,36 @@ app.post("/logout" , (req, res) => {
   res.clearCookie("user_id");
   res.redirect("/urls")
 });
+
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
   let user = emailHelper(email, users);
-  console.log(user);
   if(user) {
     if(password === user.password) {
       res.cookie("user_id",user.id);
       return res.redirect("/urls");
-    } else {
-      res.send("error 403 - password incorrect");
-    }
 
+    } else {
+      let templateVars = {
+        user,
+        error: 400,
+        message: "Your password is incorrect!"
+      }
+      res.status(400);
+      res.render("urls_error", templateVars);
+    }
   } else {
-          res.send("error 403 - email incorrect");
+    let templateVars = {
+      user,
+      error: 400,
+      message: "That email account doesn't exist!"
+    }
+     res.status(400);
+     res.render("urls_error", templateVars);
   }
 
 });
+
 app.post("/urls/:shortURL/delete", (req, res) => {
     delete urlDatabase[req.params.shortURL];
     res.redirect("/urls/");
@@ -114,7 +158,7 @@ app.post("/urls", (req, res ) => {
   urlDatabase[shortURL] = req.body.longURL;
   res.redirect(`/urls/${shortURL}`);
 });
-app.post("/urls/:id", (req, res) => {
+app.post("/urls/:id", (req, res) => { 
   urlDatabase[req.params.id] = req.body.newURL
   res.redirect("/urls")
 });
