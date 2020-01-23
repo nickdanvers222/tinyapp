@@ -5,26 +5,48 @@ const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
 const { generateRandomString, emailHelper, urlsForUser } = require("./helper")
-//
+
 app.use(cookieSession({
   name: 'session',
   keys: ["key1"]}));
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
-//
+
 const urlDatabase = {
-  // "b2xVn2": "http://www.lighthouselabs.ca",
-  // "9sm5xK": "http://www.google.com"
 };
-//
+
 const users = {
 };
-//
-app.get("/", (req, res) => {
-  res.send("youre in the root!");
+
+//GETS BEGIN
+app.get("/urls/new", (req,res) => {
+  if(!(users[req.session.user_id])) {
+    res.redirect("/login")
+  }
+  let templateVars = {
+    user: users[req.session.user_id]
+  }
+  res.render("urls_new", templateVars);
 });
 
-//RENDERS
+app.get("/urls/:shortURL", (req, res) => { // QUESTION ABOUT PATHING //
+if(!(req.params.shortURL in urlDatabase))  {res.redirect('/urls')}
+  
+let templateVars = {
+    shortURL: req.params.shortURL ,
+    longURL: urlDatabase[req.params.shortURL]["longURL"],
+    user: users[req.session.user_id]
+  };
+  res.render("urls_show", templateVars)
+});
+
+app.get("/u/:shortURL", (req, res) => {
+  res.redirect(urlDatabase[req.params.shortURL]);
+});
+
+app.get("/urls/error", (req, res) => {
+   res.redirect("/urls/error");
+ });
 
 app.get("/login", (req, res) => {
   let templateVars = {user: users[req.session.user_id]}
@@ -36,31 +58,7 @@ app.get("/register", (req, res)=> {
    res.render("urls_register", templateVars)
  });
 
- app.get("/urls/error", (req, res) => {
-   res.redirect("/urls/error");
- });
-
-app.get("/urls/new", (req,res) => {
-  if(!(users[req.session.user_id])) {
-    res.redirect("/login")
-  }
-  let templateVars = {
-    user: users[req.session.user_id]
-  }
-  res.render("urls_new", templateVars);
-});
-
-app.get("/urls/:shortURL", (req, res) => {
-  
-  let templateVars = {
-    shortURL: req.params.shortURL ,
-    longURL: urlDatabase[req.params.shortURL]["longURL"],
-    user: users[req.session.user_id]
-  };
-  res.render("urls_show", templateVars)
-});
-
- app.get("/urls",(req, res) => {
+app.get("/urls",(req, res) => {
 
     let templateVars = {
     urls: urlsForUser(urlDatabase, req.session.user_id),
@@ -68,17 +66,43 @@ app.get("/urls/:shortURL", (req, res) => {
   };
   res.render("urls_index",templateVars);
 });
-//RENDERS END
+
 app.get("/urls.json", (req, res) => {
     res.json(urlDatabase);
 });
 
-app.get("/u/:shortURL", (req, res) => {
-  res.redirect(urlDatabase[req.params.shortURL]);
-});
+
+
+
  // GETS END
 
  // POSTS START
+app.post("/urls/:shortURL/delete", (req, res) => {
+  const newObject = urlsForUser(urlDatabase, req.session.user_id)
+  if(!(req.params.shortURL in newObject)) {
+    res.redirect("/urls");
+  }
+    delete urlDatabase[req.params.shortURL];
+    res.redirect("/urls/");
+})
+
+app.post("/urls/:id", (req, res) => { 
+
+  const newObject = urlsForUser(urlDatabase, req.session.user_id)
+   if(!(req.params.id in newObject)) {
+     let templateVars = {
+       message: "You need to be logged in and visiting your own URLS to edit them",
+       error: 401,
+       user: undefined
+     }
+     res.status(401);
+     res.render("urls_error", templateVars);
+   }
+
+  urlDatabase[req.params.id]["longURL"] = req.body.newURL;
+  res.redirect("/urls")
+});
+
 app.post("/register", (req, res) => {
 const id = generateRandomString();
 const {email, password } = req.body;
@@ -88,7 +112,7 @@ const user = emailHelper(email, users);
 //
 if(email.length === 0 || password.length === 0) {
 let templateVars = {
-  user: emailHelper(email, users),
+  user: undefined,
   error: 403,
   message: "You've left the email or password field empty!"
 }
@@ -100,7 +124,7 @@ users[id] = {id, email, hashedPassword};
 //
   if (email === user.email) {
     let templateVars = {
-    user: emailHelper(email, users),
+    user: undefined,
     error: 400,
     message: "That email already exists!"
     }
@@ -113,12 +137,6 @@ req.session.user_id = id;
 res.redirect("/urls")
 });
 //
-
-///////// app.post("/urls/:shortURL/update", (req, res) => {
-/////////   urlDatabase[req.params.shortURL] = {longURL : req.body.newURL, userID : req.params.id}
-/////////   //urlDatabase[req.params.shortURL] = req.body.newURL;
-/////////   res.redirect("/urls",)
-///////// });
 app.post("/logout" , (req, res) => {
   req.session = null;
   res.redirect("/urls")
@@ -136,7 +154,7 @@ app.post("/login", (req, res) => {
 
     } else {
       let templateVars = {
-        user,
+        user : undefined,
         error: 400,
         message: "Your password is incorrect!"
       }
@@ -155,14 +173,7 @@ app.post("/login", (req, res) => {
 
 });
 
-app.post("/urls/:shortURL/delete", (req, res) => {
-  const newObject = urlsForUser(urlDatabase, req.session.user_id)
-  if(!(req.params.shortURL in newObject)) {
-    res.redirect("/urls");
-  }
-    delete urlDatabase[req.params.shortURL];
-    res.redirect("/urls/");
-})
+
 app.post("/urls", (req, res ) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
@@ -171,27 +182,12 @@ app.post("/urls", (req, res ) => {
   };
   res.redirect(`/urls/${shortURL}`);
 });
-app.post("/urls/:id", (req, res) => { 
 
-  const newObject = urlsForUser(urlDatabase, req.session.user_id)
-   if(!(req.params.id in newObject)) {
-     let templateVars = {
-       message: "You need to be logged in and visiting your own URLS to edit them",
-       error: 401,
-       user: users[req.session.user_id]
-     }
-     res.status(401);
-     res.render("urls_error", templateVars);
-   }
-
-  urlDatabase[req.params.id]["longURL"] = req.body.newURL;
-  res.redirect("/urls")
+app.get("*", (req, res) => {
+res.redirect("/urls")
 });
 
-
-
-
-
+// POSTS END
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
