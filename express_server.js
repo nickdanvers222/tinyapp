@@ -110,15 +110,15 @@ app.post("/register", (req, res) => {
   const user = emailHelper(email, users);
   
   // for dynamic error page //
-  if (email.length === 0 || password.length === 0) {
-    let templateVars = {
-      user: undefined,
-      error: 403,
-      message: "You've left the email or password field empty!"
-  }
-  /////////////////res.status(403);
-  res.render("urls_error", templateVars);
-}
+//   if (email.length === 0 || password.length === 0) {
+//     let templateVars = {
+//       user: undefined,
+//       error: 403,
+//       message: "You've left the email or password field empty!"
+//   }
+//   /////////////////res.status(403);
+//   res.render("urls_error", templateVars);
+// }
   
 users[id] = {id, email, hashedPassword};
   
