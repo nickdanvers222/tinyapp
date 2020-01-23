@@ -12,7 +12,8 @@
     <%- include ("partials/_header") %>
   <main style="margin: 1em;">
     <% if (!(user)) {%>
-     <h3 style = "text-align:center">Login to see your tinyUrls!</h3> 
+      <h2 style = "text-align: center; margin-top: 3%; "><b>Welcome to TinyApp!</b><h2>
+     <h3 style = "text-align:center; margin-top: 3%">Login to see your URL's!</h3> 
          <% } else { %>   
     <h3>My URLs</h3>
     <table class="table">
@@ -30,8 +31,8 @@
 
             <td><%= url %></td>
             <td><%= urls[url]["longURL"] %></td>
-            <td><form method="POST" action="/urls/<%=url%>/delete"><button type="submit" class = "btn btn-danger">Delete</button></form></td>
-            <td><form method="GET" action="/urls/<%=url%>" ><button type="submit" class = "btn btn-primary">Edit</button></form></td>
+            <td><form method="POST" action="/urls/<%=url%>?_method=DELETE"><button type="submit" class = "btn btn-danger" style = "color:red; background-color:white; border: red solid 2px">Delete</button></form></td>
+            <td><form method="GET" action="/urls/<%=url%>" ><button type="submit" class = "btn btn-primary" style = "color:blue; background-color:white; border: blue solid 2px">Edit</button></form></td>
           </tr>
         <% } %>
       </tbody>

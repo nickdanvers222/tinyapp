@@ -1,6 +1,6 @@
 const { assert } = require('chai');
 
-const { emailHelper, urlsForUser, generateRandomString } = require('../helper.js');
+const { emailHelper, urlsForUser, generateRandomString, httpChecker } = require('../helper.js');
 
 const testUsers = {
   "userRandomID": {
@@ -62,4 +62,17 @@ describe('urlsForUser', ()=>{
     const expected = "object";
     assert.equal((typeof user), expected)
     });
+});
+
+describe('httpChecker', ()=>{
+  it("Should return a string with HTTP:// added if it was not present", ()=> {
+  const url = "www.google.ca";
+  const expected = "http://www.google.ca"
+  assert.equal(httpChecker(url), expected)
+  });
+  it("Should return a unmolested string if HTTP is prent", () => {
+  const url = "http://www.example.com";
+  const expected = "http://www.example.com";
+  assert.equal(httpChecker(url), expected)
+  });
 });

@@ -1,3 +1,5 @@
+//# Generates a random alpha numeric 6 diget long string.
+//
 const generateRandomString = () => {
   return (Math.random().toString(36)).substr(2,6);
 };
@@ -26,10 +28,18 @@ const urlsForUser = (database, userID) => {
   return newObj;
 };
 //
+const httpChecker = (url) => {
+  if(!(url.includes("http://"))){
+   return httpURL = "http://" + url;
+  }
+  return url;
+}
+//
 module.exports = {
   generateRandomString,
   emailHelper,
-  urlsForUser
+  urlsForUser,
+  httpChecker,
 };
 
 const obj = {
@@ -40,3 +50,4 @@ const obj = {
 }
 
 console.log(emailHelper("ndanvers222@gmail.com", obj));
+console.log(httpChecker("www.google.com"));

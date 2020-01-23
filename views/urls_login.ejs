@@ -13,14 +13,16 @@
     <%- include ("partials/_header") %>
 
 <main style="margin: 1em;">
-    <h2>Login!</h2>
-    <form action="/login" method="POST">
+
+    <form action="/login" method="POST" style="text-align: center">
+          <h2>Login!</h2>
+
       <div class="form-group mb-2">
-        <label>Email</label><br>
-        <input class ="form-control" type="email" name="email" placeholder="Email Address" style="width: 300px" required><br>
-        <label>Password</label><br>
-        <input class ="form-control" type="password" name="password" placeholder="Password" style="width: 300px" required><br>
-        <button type="submit" class="btn btn-primary">Submit</button>
+        <label>Email:</label><br>
+        <input type="email" name="email" placeholder="Email Address" style="text-align: center; border-radius: 5px; width: 300px; margin-bottom: 1%" required><br>
+        <label>Password:</label><br>
+        <input type="password" name="password" placeholder="Password" style="text-align: center; border-radius: 5px; width: 300px; margin-bottom: 1%" required><br>
+        <button type="submit" class="btn btn-primary">Login</button>
       </div>
     </form>
   </main>

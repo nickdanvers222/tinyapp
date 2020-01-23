@@ -13,10 +13,10 @@
         </div>
       </div>
 
-      <% if(user) { %>
+      <% if( user ) { %>
       <h6><b>logged in as <%= user.email%></b></h6>
         <form action="/logout" method="POST">
-      <button type="submit" class="btn btn-primary" style="margin: 1em">Logout</button>
+      <button type="submit" class="btn btn-primary" style="margin: 1em; color:black; background-color:white; border:black solid 2px"">Logout</button>
        </form>
       <% } else { %>
             <div class="navbar-nav">

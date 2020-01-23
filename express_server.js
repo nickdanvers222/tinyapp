@@ -4,12 +4,14 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
-const { generateRandomString, emailHelper, urlsForUser } = require("./helper");
+var methodOverride = require('method-override')
+const { generateRandomString, emailHelper, urlsForUser, httpChecker } = require("./helper");
 
 app.use(cookieSession({
   name: 'session',
   keys: ["key1"]}));
 app.use(bodyParser.urlencoded({extended: true}));
+app.use(methodOverride('_method'))
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -21,7 +23,7 @@ const users = {
 //GETS BEGIN
 app.get("/urls/new", (req,res) => {
   if (!(users[req.session.userID])) {
-    res.redirect("/login");
+    return res.redirect("/login");
   }
   let templateVars = {
     user: users[req.session.userID]
@@ -30,9 +32,9 @@ app.get("/urls/new", (req,res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => { // QUESTION ABOUT PATHING //
-  if (!(req.params.shortURL in urlDatabase)) {
-    res.redirect('/urls');
-  }
+  // if (!(req.params.shortURL in urlDatabase)) {
+  //   res.redirect('/urls');
+  // }
   
   let templateVars = {
     shortURL: req.params.shortURL ,
@@ -78,16 +80,16 @@ app.get("/urls.json", (req, res) => {
 // GETS END
 
 // POSTS START
-app.post("/urls/:shortURL/delete", (req, res) => {
+app.delete("/urls/:shortURL", (req, res) => {
   const newObject = urlsForUser(urlDatabase, req.session.userID);
   if (!(req.params.shortURL in newObject)) {
-    res.redirect("/urls");
+    return res.redirect("/urls");
   }
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls/");
 });
 
-app.post("/urls/:id", (req, res) => {
+app.patch("/urls/:id", (req, res) => {
   const newObject = urlsForUser(urlDatabase, req.session.userID);
   if (!(req.params.id in newObject)) {
     let templateVars = {
@@ -96,10 +98,10 @@ app.post("/urls/:id", (req, res) => {
       user: undefined
     };
     /////////////////res.status(401);
-    res.render("urls_error", templateVars);
+    return res.render("urls_error", templateVars);
   }
 
-  urlDatabase[req.params.id]["longURL"] = "http://" + req.body.newURL;//////////////////recently added
+  urlDatabase[req.params.id]["longURL"] = httpChecker(req.body.newURL);//////////////////recently added
   res.redirect("/urls");
 });
 
@@ -108,18 +110,7 @@ app.post("/register", (req, res) => {
   const {email, password } = req.body;
   const hashedPassword = bcrypt.hashSync(password, 10)
   const user = emailHelper(email, users);
-  
-  // for dynamic error page //
-//   if (email.length === 0 || password.length === 0) {
-//     let templateVars = {
-//       user: undefined,
-//       error: 403,
-//       message: "You've left the email or password field empty!"
-//   }
-//   /////////////////res.status(403);
-//   res.render("urls_error", templateVars);
-// }
-  
+
 users[id] = {id, email, hashedPassword};
   
   if (email === user.email) {
@@ -129,7 +120,7 @@ users[id] = {id, email, hashedPassword};
       message: "That email already exists!"
     };
     /////////////////res.status(400);
-    res.render("urls_error", templateVars);
+    return res.render("urls_error", templateVars);
   }
   
   req.session.userID = id; 
@@ -178,18 +169,20 @@ app.post("/login", (req, res) => {
 app.post("/urls",(req, res ) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
-    longURL : req.body.longURL,
+    longURL : httpChecker(req.body.longURL),   
     userID : req.session.userID
   };
-  res.redirect(`/urls/${shortURL}`);
+ return res.redirect(`/urls/${shortURL}`);
 });
 
-app.get("*", (req, res) => {
-  res.redirect("/urls");
-});
+ app.get("*", (req, res) => {
+   res.redirect("/urls");
+ });
 
 // POSTS END
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
+
+
 
