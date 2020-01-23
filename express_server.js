@@ -3,19 +3,17 @@ const app = express();
 const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieParser = require("cookie-parser");
+const bcrypt = require('bcrypt');
+//
 app.use(cookieParser());
 app.use(bodyParser.urlencoded({extended: true}));
 app.set("view engine", "ejs");
-
-///
+//
 const urlDatabase = {
   // "b2xVn2": "http://www.lighthouselabs.ca",
   // "9sm5xK": "http://www.google.com"
-  
-
-
 };
-///
+//
 const users = {
 };
 //
@@ -82,6 +80,7 @@ app.get("/u/:shortURL", (req, res) => {
 app.post("/register", (req, res) => {
 const id = generateRandomString();
 const {email, password } = req.body;
+const hashedPassword = bcrypt.hashSync(password, 10)
 const user = emailHelper(email, users);
 
 //
@@ -95,7 +94,8 @@ res.status(403);
 res.render("urls_error", templateVars)
 }
 //
-users[id] = {id, email, password};
+users[id] = {id, email, hashedPassword};
+console.log(users[id]);
 //
   if (email === user.email) {
     let templateVars = {
@@ -124,9 +124,11 @@ app.post("/logout" , (req, res) => {
 
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
+
   let user = emailHelper(email, users);
   if(user) {
-    if(password === user.password) {
+
+    if(bcrypt.compareSync(password, user.hashedPassword)) {
       res.cookie("user_id",user.id);
       return res.redirect("/urls");
 
