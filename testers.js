@@ -1,6 +1,6 @@
 const express = require("express");
 const app = express();
-const PORT = 8080; // default port 8080
+const PORT = 3838; // default port 3838
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
@@ -20,11 +20,11 @@ const users = {
 
 //GETS BEGIN
 app.get("/urls/new", (req,res) => {
-  if (!(users[req.session.userID])) {
+  if (!(users[req.session.userId])) {
     res.redirect("/login");
   }
   let templateVars = {
-    user: users[req.session.userID]
+    user: users[req.session.userId]
   };
   res.render("urls_new", templateVars);
 });
@@ -37,7 +37,7 @@ app.get("/urls/:shortURL", (req, res) => { // QUESTION ABOUT PATHING //
   let templateVars = {
     shortURL: req.params.shortURL ,
     longURL: urlDatabase[req.params.shortURL]["longURL"],
-    user: users[req.session.userID]
+    user: users[req.session.userId]
   };
   res.render("urls_show", templateVars);
 });
@@ -51,19 +51,19 @@ app.get("/urls/error", (req, res) => {
 });
 
 app.get("/login", (req, res) => {
-  let templateVars = {user: users[req.session.userID]};
+  let templateVars = {user: users[req.session.userId]};
   res.render("urls_login", templateVars);
 });
 
 app.get("/register", (req, res)=> {
-  let templateVars = {user: users[req.session.userID]};
+  let templateVars = {user: users[req.session.userId]};
   res.render("urls_register", templateVars);
 });
 
 app.get("/urls",(req, res) => {
   let templateVars = {
-    urls: urlsForUser(urlDatabase, req.session.userID),
-    user: users[req.session.userID]
+    urls: urlsForUser(urlDatabase, req.session.userId),
+    user: users[req.session.userId]
   };
   res.render("urls_index",templateVars);
 });
@@ -79,7 +79,7 @@ app.get("/urls.json", (req, res) => {
 
 // POSTS START
 app.post("/urls/:shortURL/delete", (req, res) => {
-  const newObject = urlsForUser(urlDatabase, req.session.userID);
+  const newObject = urlsForUser(urlDatabase, req.session.userId);
   if (!(req.params.shortURL in newObject)) {
     res.redirect("/urls");
   }
@@ -88,18 +88,18 @@ app.post("/urls/:shortURL/delete", (req, res) => {
 });
 
 app.post("/urls/:id", (req, res) => {
-  const newObject = urlsForUser(urlDatabase, req.session.userID);
+  const newObject = urlsForUser(urlDatabase, req.session.userId);
   if (!(req.params.id in newObject)) {
     let templateVars = {
     message: "You need to be logged in and visiting your own URLS to edit them",
       error: 401,
       user: undefined
     };
-    /////////////////res.status(401);
+    res.status(401);
     res.render("urls_error", templateVars);
   }
 
-  urlDatabase[req.params.id]["longURL"] = "http://" + req.body.newURL;//////////////////recently added
+  urlDatabase[req.params.id]["longURL"] = req.body.newURL;
   res.redirect("/urls");
 });
 
@@ -115,12 +115,12 @@ app.post("/register", (req, res) => {
       user: undefined,
       error: 403,
       message: "You've left the email or password field empty!"
-  }
-  /////////////////res.status(403);
+}
+  res.status(403);
   res.render("urls_error", templateVars);
 }
   
-users[id] = {id, email, hashedPassword};
+  users[id] = {id, email, hashedPassword};
   
   if (email === user.email) {
     let templateVars = {
@@ -128,11 +128,11 @@ users[id] = {id, email, hashedPassword};
       error: 400,
       message: "That email already exists!"
     };
-    /////////////////res.status(400);
+    res.status(400);
     res.render("urls_error", templateVars);
   }
   
-  req.session.userID = id; 
+  req.session.userId = id; 
 
   res.redirect("/urls");
 });
@@ -141,7 +141,7 @@ app.post("/logout" , (req, res) => {
   req.session = null;
   res.redirect("/urls");
 });
-//urls_login
+
 app.post("/login", (req, res) => {
   const { email, password } = req.body;
 
@@ -149,7 +149,7 @@ app.post("/login", (req, res) => {
   if (user) {
 
     if (bcrypt.compareSync(password, user.hashedPassword)) {
-      req.session.userID = user.id;
+      req.session.userId = user.id;
       return res.redirect("/urls");
 
       // for dynamic error page //
@@ -159,7 +159,7 @@ app.post("/login", (req, res) => {
         error: 400,
         message: "Your password is incorrect!"
       };
-      /////////////////res.status(400);
+      res.status(400);
       res.render("urls_error", templateVars);
     }
   } else {
@@ -168,18 +168,18 @@ app.post("/login", (req, res) => {
       error: 400,
       message: "That email account doesn't exist!"
     };
-    /////////////////res.status(400);
+    res.status(400);
     res.render("urls_error", templateVars);
   }
 
 });
 
-//urls_new
+
 app.post("/urls",(req, res ) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
     longURL : req.body.longURL,
-    userID : req.session.userID
+    userID : req.session.userId
   };
   res.redirect(`/urls/${shortURL}`);
 });

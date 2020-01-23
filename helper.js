@@ -2,9 +2,9 @@ const generateRandomString = () => {
   return (Math.random().toString(36)).substr(2,6);
 };
 //
-const emailHelper = (email, users) => {
-  for (const ids in users) {
-    const user = users[ids];
+const emailHelper = (email, usersObj) => {
+  for (const ids in usersObj) {
+    const user = usersObj[ids];
     if (email === user.email) {
       return user;
     }
@@ -31,3 +31,12 @@ module.exports = {
   emailHelper,
   urlsForUser
 };
+
+const obj = {
+    1: {email: "one"},
+    2: {email: "two"},
+    3: {email: "ndanvers222@gmail.com"},
+    4: {email: "4"}
+}
+
+console.log(emailHelper("ndanvers222@gmail.com", obj));
