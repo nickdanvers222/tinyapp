@@ -103,7 +103,7 @@ app.patch("/urls/:id", (req, res) => {
   urlDatabase[req.params.id]["longURL"] = httpChecker(req.body.newURL);
   res.redirect("/urls");
 });
-
+//urls_register
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   const {email, password } = req.body;
@@ -178,7 +178,6 @@ app.get("*", (req, res) => {
   res.redirect("/urls");
 });
 
-// POSTS END
 app.listen(PORT, () => {
   console.log(`Example app listening on port ${PORT}!`);
 });
