@@ -4,14 +4,14 @@ const PORT = 8080; // default port 8080
 const bodyParser = require("body-parser");
 const cookieSession = require("cookie-session");
 const bcrypt = require('bcrypt');
-var methodOverride = require('method-override')
+const methodOverride = require('method-override');
 const { generateRandomString, emailHelper, urlsForUser, httpChecker } = require("./helper");
 
 app.use(cookieSession({
   name: 'session',
   keys: ["key1"]}));
 app.use(bodyParser.urlencoded({extended: true}));
-app.use(methodOverride('_method'))
+app.use(methodOverride('_method'));
 app.set("view engine", "ejs");
 
 const urlDatabase = {
@@ -32,9 +32,9 @@ app.get("/urls/new", (req,res) => {
 });
 
 app.get("/urls/:shortURL", (req, res) => {
-   if (!(req.params.shortURL in urlDatabase)) {
-     res.redirect('/urls');
-   }
+  if (!(req.params.shortURL in urlDatabase)) {
+    res.redirect('/urls');
+  }
   
   let templateVars = {
     shortURL: req.params.shortURL ,
@@ -93,25 +93,24 @@ app.patch("/urls/:id", (req, res) => {
   const newObject = urlsForUser(urlDatabase, req.session.userID);
   if (!(req.params.id in newObject)) {
     let templateVars = {
-    message: "You need to be logged in and visiting your own URLS to edit them",
+      message: "You need to be logged in and visiting your own URLS to edit them",
       error: 401,
       user: undefined
     };
-    /////////////////res.status(401);
     return res.render("urls_error", templateVars);
   }
 
-  urlDatabase[req.params.id]["longURL"] = httpChecker(req.body.newURL);//////////////////recently added
+  urlDatabase[req.params.id]["longURL"] = httpChecker(req.body.newURL);
   res.redirect("/urls");
 });
 
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   const {email, password } = req.body;
-  const hashedPassword = bcrypt.hashSync(password, 10)
+  const hashedPassword = bcrypt.hashSync(password, 10);
   const user = emailHelper(email, users);
 
-users[id] = {id, email, hashedPassword};
+  users[id] = {id, email, hashedPassword};
   
   if (email === user.email) {
     let templateVars = {
@@ -119,11 +118,11 @@ users[id] = {id, email, hashedPassword};
       error: 400,
       message: "That email already exists!"
     };
-    /////////////////res.status(400);
+    
     return res.render("urls_error", templateVars);
   }
   
-  req.session.userID = id; 
+  req.session.userID = id;
 
   res.redirect("/urls");
 });
@@ -150,7 +149,7 @@ app.post("/login", (req, res) => {
         error: 400,
         message: "Your password is incorrect!"
       };
-      /////////////////res.status(400);
+      
       res.render("urls_error", templateVars);
     }
   } else {
@@ -159,25 +158,25 @@ app.post("/login", (req, res) => {
       error: 400,
       message: "That email account doesn't exist!"
     };
-    /////////////////res.status(400);
+    
     res.render("urls_error", templateVars);
   }
 
 });
 
 //urls_new
-app.post("/urls",(req, res ) => {
+app.post("/urls",(req, res) => {
   const shortURL = generateRandomString();
   urlDatabase[shortURL] = {
-    longURL : httpChecker(req.body.longURL),   
+    longURL : httpChecker(req.body.longURL),
     userID : req.session.userID
   };
- return res.redirect(`/urls/${shortURL}`);
+  return res.redirect(`/urls/${shortURL}`);
 });
 
- app.get("*", (req, res) => {
-   res.redirect("/urls");
- });
+app.get("*", (req, res) => {
+  res.redirect("/urls");
+});
 
 // POSTS END
 app.listen(PORT, () => {
