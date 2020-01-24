@@ -31,10 +31,10 @@ app.get("/urls/new", (req,res) => {
   res.render("urls_new", templateVars);
 });
 
-app.get("/urls/:shortURL", (req, res) => { // QUESTION ABOUT PATHING //
-  // if (!(req.params.shortURL in urlDatabase)) {
-  //   res.redirect('/urls');
-  // }
+app.get("/urls/:shortURL", (req, res) => {
+   if (!(req.params.shortURL in urlDatabase)) {
+     res.redirect('/urls');
+   }
   
   let templateVars = {
     shortURL: req.params.shortURL ,
