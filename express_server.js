@@ -20,7 +20,7 @@ const urlDatabase = {
 const users = {
 };
 
-//GETS BEGIN
+//Create short URL page, URL_new template
 app.get("/urls/new", (req,res) => {
   if (!(users[req.session.userID])) {
     return res.redirect("/login");
@@ -30,7 +30,7 @@ app.get("/urls/new", (req,res) => {
   };
   res.render("urls_new", templateVars);
 });
-
+//show short URL, URL_show template
 app.get("/urls/:shortURL", (req, res) => {
   if (!(req.params.shortURL in urlDatabase)) {
     res.redirect('/urls');
@@ -39,29 +39,29 @@ app.get("/urls/:shortURL", (req, res) => {
   let templateVars = {
     shortURL: req.params.shortURL ,
     longURL: urlDatabase[req.params.shortURL]["longURL"],
-    user: users[req.session.userID]
+    user: users[req.session.userID],
   };
   res.render("urls_show", templateVars);
 });
-
+//redirect link in URL_show , link to longURL
 app.get("/u/:shortURL", (req, res) => {
-  res.redirect(urlDatabase[req.params.shortURL]);
+  res.redirect(urlDatabase[req.params.shortURL]["longURL"]);//////
 });
-
+//dynamic error page
 app.get("/urls/error", (req, res) => {
   res.redirect("/urls/error");
 });
-
+//login, URLS_login
 app.get("/login", (req, res) => {
   let templateVars = {user: users[req.session.userID]};
   res.render("urls_login", templateVars);
 });
-
+//register, URLS_register
 app.get("/register", (req, res)=> {
   let templateVars = {user: users[req.session.userID]};
   res.render("urls_register", templateVars);
 });
-
+//home page, URLS_index
 app.get("/urls",(req, res) => {
   let templateVars = {
     urls: urlsForUser(urlDatabase, req.session.userID),
@@ -74,12 +74,7 @@ app.get("/urls.json", (req, res) => {
   res.json(urlDatabase);
 });
 
-
-
-
-// GETS END
-
-// POSTS START
+//delete through a button, present in /urls, using URLS_index
 app.delete("/urls/:shortURL", (req, res) => {
   const newObject = urlsForUser(urlDatabase, req.session.userID);
   if (!(req.params.shortURL in newObject)) {
@@ -88,7 +83,7 @@ app.delete("/urls/:shortURL", (req, res) => {
   delete urlDatabase[req.params.shortURL];
   res.redirect("/urls/");
 });
-
+//update longURL through a button , button is on urls_show
 app.patch("/urls/:id", (req, res) => {
   const newObject = urlsForUser(urlDatabase, req.session.userID);
   if (!(req.params.id in newObject)) {
@@ -103,7 +98,7 @@ app.patch("/urls/:id", (req, res) => {
   urlDatabase[req.params.id]["longURL"] = httpChecker(req.body.newURL);
   res.redirect("/urls");
 });
-//urls_register
+//create account ,urls_register
 app.post("/register", (req, res) => {
   const id = generateRandomString();
   const {email, password } = req.body;
@@ -126,7 +121,7 @@ app.post("/register", (req, res) => {
 
   res.redirect("/urls");
 });
-//
+// logout button present in header
 app.post("/logout" , (req, res) => {
   req.session = null;
   res.redirect("/urls");
