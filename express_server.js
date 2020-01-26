@@ -45,7 +45,7 @@ app.get("/urls/:shortURL", (req, res) => {
 });
 //redirect link in URL_show , link to longURL
 app.get("/u/:shortURL", (req, res) => {
-  res.redirect(urlDatabase[req.params.shortURL]["longURL"]);//////
+  res.redirect(urlDatabase[req.params.shortURL]["longURL"]);
 });
 //dynamic error page
 app.get("/urls/error", (req, res) => {
@@ -116,11 +116,11 @@ app.post("/register", (req, res) => {
     
     return res.render("urls_error", templateVars);
   }
-  
-  req.session.userID = id;
 
+  req.session.userID = id;
   res.redirect("/urls");
 });
+
 // logout button present in header
 app.post("/logout" , (req, res) => {
   req.session = null;
@@ -156,7 +156,6 @@ app.post("/login", (req, res) => {
     
     res.render("urls_error", templateVars);
   }
-
 });
 
 //urls_new
